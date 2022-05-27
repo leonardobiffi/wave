@@ -11,7 +11,7 @@ import (
 	"github.com/leonardobiffi/wave/player"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var docStyle = lipgloss.NewStyle().Margin(1, 3)
 
 type item struct {
 	title     string
@@ -40,6 +40,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "esc", "ctrl+c":
 			m.dj.Stop()
 			return m, tea.Quit
+		case "+":
+			m.dj.VolumeUp()
+		case "-":
+			m.dj.VolumeDown()
 		case "m":
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
@@ -97,7 +101,7 @@ func main() {
 		muted: false,
 	}
 
-	m.list.Title = "Radio CLI"
+	m.list.Title = "Wave - Radio Player"
 	m.list.NewStatusMessage("Press enter to play")
 
 	p := tea.NewProgram(m, tea.WithAltScreen())

@@ -45,13 +45,13 @@ func (dj *Dj) Mute() {
 	}
 }
 
-func (dj *Dj) Turnup() {
+func (dj *Dj) VolumeUp() {
 	if dj.CurrentStation >= 0 {
 		dj.Player.IncVolume()
 	}
 }
 
-func (dj *Dj) Turndown() {
+func (dj *Dj) VolumeDown() {
 	if dj.CurrentStation >= 0 {
 		dj.Player.DecVolume()
 	}
