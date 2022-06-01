@@ -95,8 +95,11 @@ func main() {
 	var pipeChan = make(chan io.ReadCloser)
 	var mplayer = player.MPlayer{PlayerName: "mplayer", IsPlaying: false, PipeChan: pipeChan}
 
+	var list = list.New(items, list.NewDefaultDelegate(), 0, 0)
+	list.SetShowStatusBar(false)
+
 	m := model{
-		list:  list.New(items, list.NewDefaultDelegate(), 0, 0),
+		list:  list,
 		dj:    player.Dj{Player: &mplayer, Stations: stations, CurrentStation: -1},
 		muted: false,
 	}
