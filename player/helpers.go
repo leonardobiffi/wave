@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/user"
 	"strings"
+
+	"github.com/leonardobiffi/wave/radiogarden"
 )
 
 func check(err error) {
@@ -41,6 +43,24 @@ func LoadStations() []RadioStation {
 			}
 		}
 		check(scanner.Err())
+	}
+
+	return stations
+}
+
+func LoadStationsApi() []RadioStation {
+	var stations []RadioStation
+
+	client := radiogarden.New()
+
+	result, err := client.SearchStations("Kiss FM, SP")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, station := range result {
+		url := client.GetStationStream(radiogarden.ExtractID(station.Url))
+		stations = append(stations, RadioStation{station.Title, url, station.Type})
 	}
 
 	return stations

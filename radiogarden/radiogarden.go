@@ -7,12 +7,14 @@ import (
 	radiogarden "github.com/jonasrmichel/radio-garden-go"
 )
 
+const RadioGardenAPIUrl = "https://radio.garden/api"
+
 type RadioGarden struct {
 	client *radiogarden.ClientWithResponses
 }
 
 func New() *RadioGarden {
-	client, err := radiogarden.NewClientWithResponses("https://radio.garden/api")
+	client, err := radiogarden.NewClientWithResponses(RadioGardenAPIUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +25,7 @@ func New() *RadioGarden {
 }
 
 func (r *RadioGarden) GetStationStream(stationId string) string {
-	return fmt.Sprintf("https://radio.garden/api/ara/content/listen/%s/channel.mp3", stationId)
+	return fmt.Sprintf("%s/ara/content/listen/%s/channel.mp3", RadioGardenAPIUrl, stationId)
 }
 
 func (r *RadioGarden) GetStation(stationId string) (*radiogarden.Channel, error) {
@@ -38,7 +40,7 @@ func (r *RadioGarden) GetStation(stationId string) (*radiogarden.Channel, error)
 	return res.JSON200.Data, nil
 }
 
-func (r *RadioGarden) Search(search string) (*[]radiogarden.SearchResult, error) {
+func (r *RadioGarden) SearchStations(search string) ([]Search, error) {
 	res, err := r.client.GetSearchWithResponse(
 		context.Background(),
 		&radiogarden.GetSearchParams{
@@ -49,5 +51,55 @@ func (r *RadioGarden) Search(search string) (*[]radiogarden.SearchResult, error)
 		return nil, err
 	}
 
-	return res.JSON200.Hits.Hits, nil
+	var stations []Search
+	for _, hit := range *res.JSON200.Hits.Hits {
+		if *hit.Source.Type == "channel" {
+			if *hit.Score < 150 {
+				continue
+			}
+
+			stations = append(stations, Search{
+				Score:    *hit.Score,
+				Code:     *hit.Source.Code,
+				Subtitle: *hit.Source.Subtitle,
+				Title:    *hit.Source.Title,
+				Type:     *hit.Source.Type,
+				Url:      *hit.Source.Url,
+			})
+		}
+	}
+
+	return stations, nil
+}
+
+func (r *RadioGarden) SearchPlaces(search string) ([]Search, error) {
+	res, err := r.client.GetSearchWithResponse(
+		context.Background(),
+		&radiogarden.GetSearchParams{
+			Q: search,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var places []Search
+	for _, hit := range *res.JSON200.Hits.Hits {
+		if *hit.Source.Type == "place" {
+			if *hit.Score < 150 {
+				continue
+			}
+
+			places = append(places, Search{
+				Score:    *hit.Score,
+				Code:     *hit.Source.Code,
+				Subtitle: *hit.Source.Subtitle,
+				Title:    *hit.Source.Title,
+				Type:     *hit.Source.Type,
+				Url:      *hit.Source.Url,
+			})
+		}
+	}
+
+	return places, nil
 }

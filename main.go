@@ -40,6 +40,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "esc", "ctrl+c":
 			m.dj.Stop()
 			return m, tea.Quit
+		case "x":
+			m.dj.Stop()
 		case "+":
 			m.dj.VolumeUp()
 		case "-":
@@ -82,7 +84,7 @@ func (m model) View() string {
 }
 
 func main() {
-	var stations = player.LoadStations()
+	var stations = player.LoadStationsApi()
 	if len(stations) == 0 {
 		panic("no stations found")
 	}
@@ -93,14 +95,14 @@ func main() {
 	}
 
 	var pipeChan = make(chan io.ReadCloser)
-	var mplayer = player.MPlayer{PlayerName: "mplayer", IsPlaying: false, PipeChan: pipeChan}
+	var mpv = player.MPV{PlayerName: "mpv", IsPlaying: false, PipeChan: pipeChan}
 
 	var list = list.New(items, list.NewDefaultDelegate(), 0, 0)
 	list.SetShowStatusBar(false)
 
 	m := model{
 		list:  list,
-		dj:    player.Dj{Player: &mplayer, Stations: stations, CurrentStation: -1},
+		dj:    player.Dj{Player: &mpv, Stations: stations, CurrentStation: -1},
 		muted: false,
 	}
 
