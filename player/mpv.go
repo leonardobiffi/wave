@@ -45,14 +45,23 @@ func (player *MPV) Play(stream_url string) {
 			player.PipeChan <- player.Out
 		}()
 
-		time.Sleep(time.Second * 1)
-		conn := mpvipc.NewConnection("/tmp/mpv.sock")
-		err = conn.Open()
-		if err != nil {
-			panic(err)
-		}
+		var wait time.Duration = 10
 
-		player.Connection = conn
+		for {
+			if wait == 0 {
+				log.Fatal("Could not connect to mpv socket")
+			}
+
+			time.Sleep(time.Second * 1)
+			conn := mpvipc.NewConnection("/tmp/mpv.sock")
+			err = conn.Open()
+			if err == nil {
+				player.Connection = conn
+				break
+			}
+
+			wait--
+		}
 	}
 }
 

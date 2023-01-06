@@ -91,7 +91,7 @@ func main() {
 
 	var items []list.Item
 	for _, station := range stations {
-		items = append(items, item{station.Name, station.StreamURL, station.Genre})
+		items = append(items, item{station.Name, station.StreamURL, station.Subtitle})
 	}
 
 	var pipeChan = make(chan io.ReadCloser)

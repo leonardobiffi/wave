@@ -1,6 +1,6 @@
 module github.com/leonardobiffi/wave
 
-go 1.17
+go 1.19
 
 require (
 	github.com/DexterLB/mpvipc v0.0.0-20210824102722-5d27ef06b6c3
@@ -9,6 +9,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/jonasrmichel/radio-garden-go v0.1.0
 	github.com/shirou/gopsutil/v3 v3.22.7
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
