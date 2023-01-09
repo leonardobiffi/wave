@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/leonardobiffi/wave/player"
+	"github.com/leonardobiffi/wave/version"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 3)
@@ -106,7 +107,7 @@ func main() {
 		muted: false,
 	}
 
-	m.list.Title = "Wave - Radio Player"
+	m.list.Title = fmt.Sprintf("Wave - Radio Player %s", version.String())
 	m.list.NewStatusMessage("Press enter to play")
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
