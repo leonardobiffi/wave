@@ -14,7 +14,11 @@ builds:
       - windows
       - darwin
     ignore:
-      - goarch: 386
+      - goarch: "386"
+    # Custom ldflags templates.
+    # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
+    ldflags:
+      - -s -w -X github.com/leonardobiffi/wave/version.Version={{.Version}}
 archives:
   - format: zip
 checksum:

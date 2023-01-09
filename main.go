@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/leonardobiffi/wave/player"
+	"github.com/leonardobiffi/wave/version"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 3)
@@ -40,6 +41,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "esc", "ctrl+c":
 			m.dj.Stop()
 			return m, tea.Quit
+		case "x":
+			m.dj.Stop()
 		case "+":
 			m.dj.VolumeUp()
 		case "-":
@@ -82,29 +85,29 @@ func (m model) View() string {
 }
 
 func main() {
-	var stations = player.LoadStations()
+	var stations = player.LoadStationsApi()
 	if len(stations) == 0 {
 		panic("no stations found")
 	}
 
 	var items []list.Item
 	for _, station := range stations {
-		items = append(items, item{station.Name, station.StreamURL, station.Genre})
+		items = append(items, item{station.Name, station.StreamURL, station.Subtitle})
 	}
 
 	var pipeChan = make(chan io.ReadCloser)
-	var mplayer = player.MPlayer{PlayerName: "mplayer", IsPlaying: false, PipeChan: pipeChan}
+	var mpv = player.MPV{PlayerName: "mpv", IsPlaying: false, PipeChan: pipeChan}
 
 	var list = list.New(items, list.NewDefaultDelegate(), 0, 0)
 	list.SetShowStatusBar(false)
 
 	m := model{
 		list:  list,
-		dj:    player.Dj{Player: &mplayer, Stations: stations, CurrentStation: -1},
+		dj:    player.Dj{Player: &mpv, Stations: stations, CurrentStation: -1},
 		muted: false,
 	}
 
-	m.list.Title = "Wave - Radio Player"
+	m.list.Title = fmt.Sprintf("Wave - Radio Player %s", version.String())
 	m.list.NewStatusMessage("Press enter to play")
 
 	p := tea.NewProgram(m, tea.WithAltScreen())

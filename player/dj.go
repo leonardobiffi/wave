@@ -18,7 +18,7 @@ type RadioPlayer interface {
 type RadioStation struct {
 	Name      string
 	StreamURL string
-	Genre     string
+	Subtitle  string
 }
 
 func (dj *Dj) Play(station int) {
