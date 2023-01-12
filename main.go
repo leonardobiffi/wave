@@ -107,7 +107,7 @@ func main() {
 		muted: false,
 	}
 
-	m.list.Title = fmt.Sprintf("Wave - Radio Player %s", version.String())
+	m.list.Title = fmt.Sprintf("Wave - Radio Player v%s", version.String())
 	m.list.NewStatusMessage("Press enter to play")
 
 	p := tea.NewProgram(m, tea.WithAltScreen())

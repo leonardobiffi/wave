@@ -1,6 +1,6 @@
 package version
 
-var Version = "v0.0.0-dev"
+var Version = "0.0.0-dev"
 var template = `Wave {{printf "%s" .Version}}`
 
 func String() string {
