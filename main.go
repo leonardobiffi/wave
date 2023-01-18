@@ -5,10 +5,13 @@ import (
 	"io"
 	"os"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/leonardobiffi/wave/player"
+	"github.com/leonardobiffi/wave/pkg/config"
+	"github.com/leonardobiffi/wave/pkg/helpers"
+	"github.com/leonardobiffi/wave/pkg/player"
 	"github.com/leonardobiffi/wave/version"
 )
 
@@ -25,9 +28,11 @@ func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
 type model struct {
-	list  list.Model
-	dj    player.Dj
-	muted bool
+	list         list.Model
+	dj           player.Dj
+	muted        bool
+	keys         *listKeyMap
+	delegateKeys *config.DelegateKeyMap
 }
 
 func (m model) Init() tea.Cmd {
@@ -37,17 +42,18 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "esc", "ctrl+c":
+		switch {
+		case helpers.Contains(msg.String(), []string{"q", "esc", "ctrl+c"}):
 			m.dj.Stop()
 			return m, tea.Quit
-		case "x":
+		case key.Matches(msg, m.delegateKeys.Stop()):
 			m.dj.Stop()
-		case "+":
+			m.list.NewStatusMessage("Press enter to play")
+		case key.Matches(msg, m.keys.volupeUp):
 			m.dj.VolumeUp()
-		case "-":
+		case key.Matches(msg, m.keys.volupeDown):
 			m.dj.VolumeDown()
-		case "m":
+		case key.Matches(msg, m.delegateKeys.Mute()):
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
 				if m.muted {
@@ -63,7 +69,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		if msg.String() == "enter" {
+		if key.Matches(msg, m.delegateKeys.Play()) {
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
 				m.list.NewStatusMessage(m.dj.FormatPlayStatus(i.title))
@@ -84,6 +90,24 @@ func (m model) View() string {
 	return docStyle.Render(m.list.View())
 }
 
+type listKeyMap struct {
+	volupeUp   key.Binding
+	volupeDown key.Binding
+}
+
+func newListKeyMap() *listKeyMap {
+	return &listKeyMap{
+		volupeUp: key.NewBinding(
+			key.WithKeys("+"),
+			key.WithHelp("+", "increase volume"),
+		),
+		volupeDown: key.NewBinding(
+			key.WithKeys("-"),
+			key.WithHelp("-", "decresase volume"),
+		),
+	}
+}
+
 func main() {
 	var stations = player.LoadStationsApi()
 	if len(stations) == 0 {
@@ -95,23 +119,33 @@ func main() {
 		items = append(items, item{station.Name, station.StreamURL, station.Subtitle})
 	}
 
+	var listKeys = newListKeyMap()
+	var delegateKeys = config.NewDelegateKeyMap()
 	var pipeChan = make(chan io.ReadCloser)
 	var mpv = player.MPV{PlayerName: "mpv", IsPlaying: false, PipeChan: pipeChan}
 
-	var list = list.New(items, list.NewDefaultDelegate(), 0, 0)
+	delegate := config.NewItemDelegate(delegateKeys)
+	var list = list.New(items, delegate, 0, 0)
 	list.SetShowStatusBar(false)
 
 	m := model{
-		list:  list,
-		dj:    player.Dj{Player: &mpv, Stations: stations, CurrentStation: -1},
-		muted: false,
+		list:         list,
+		dj:           player.Dj{Player: &mpv, Stations: stations, CurrentStation: -1},
+		muted:        false,
+		keys:         listKeys,
+		delegateKeys: delegateKeys,
 	}
 
 	m.list.Title = fmt.Sprintf("Wave - Radio Player v%s", version.String())
 	m.list.NewStatusMessage("Press enter to play")
+	m.list.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			listKeys.volupeUp,
+			listKeys.volupeDown,
+		}
+	}
 
-	p := tea.NewProgram(m, tea.WithAltScreen())
-	if err := p.Start(); err != nil {
+	if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}

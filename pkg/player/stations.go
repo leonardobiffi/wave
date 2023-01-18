@@ -3,17 +3,15 @@ package player
 import (
 	"os"
 	"os/user"
+	"sort"
 
-	"github.com/leonardobiffi/wave/radiogarden"
+	"github.com/leonardobiffi/wave/pkg/radiogarden"
 	"gopkg.in/yaml.v3"
 )
 
-var defaultStations = []RadioStation{
-	{
-		Name:      "Super Rádio Tupi 96.5 FM",
-		StreamURL: "https://radio.garden/api/ara/content/listen/RMuzTKOn/channel.mp3",
-		Subtitle:  "Rio de Janeiro RJ, Brazil",
-	},
+var defaultStations = []string{
+	"Super Rádio Tupi, Rio de Janeiro RJ, Brazil",
+	"Kiss FM, São Paulo SP, Brazil",
 }
 
 func LoadStationsApi() []RadioStation {
@@ -42,7 +40,6 @@ func LoadStationsApi() []RadioStation {
 		}
 	}
 
-	stations = append(stations, defaultStations...)
 	return stations
 }
 
@@ -53,7 +50,6 @@ type PersonalRadioStation struct {
 }
 
 func loadPersonalStations() (stations PersonalRadioStation) {
-
 	usr, _ := user.Current()
 	dir := usr.HomeDir
 	defaultFile := dir + "/.wave/stations.yaml"
@@ -63,7 +59,16 @@ func loadPersonalStations() (stations PersonalRadioStation) {
 
 		err = yaml.Unmarshal(f, &stations)
 		check(err)
+	} else {
+		// create the file yaml file
+		stations.Stations.Search = defaultStations
+		d, err := yaml.Marshal(&stations)
+		check(err)
+
+		err = os.WriteFile(defaultFile, d, 0644)
+		check(err)
 	}
 
+	sort.Strings(stations.Stations.Search)
 	return stations
 }
