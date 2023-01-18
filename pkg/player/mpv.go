@@ -137,12 +137,12 @@ func (player *MPV) IncVolume() {
 			log.Fatal(err)
 		}
 
-		vol, err := player.Connection.Get("volume")
+		_, err = player.Connection.Get("volume")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		log.Println(vol)
+		// TODO: Send volume to UI
 	}
 }
 
@@ -153,11 +153,11 @@ func (player *MPV) DecVolume() {
 			log.Fatal(err)
 		}
 
-		vol, err := player.Connection.Get("volume")
+		_, err = player.Connection.Get("volume")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		log.Println(vol)
+		// TODO: Send volume to UI
 	}
 }
