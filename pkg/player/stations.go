@@ -65,6 +65,10 @@ func loadPersonalStations() (stations PersonalRadioStation) {
 		d, err := yaml.Marshal(&stations)
 		check(err)
 
+		// create the directory
+		err = os.MkdirAll(dir+"/.wave", 0755)
+		check(err)
+
 		err = os.WriteFile(defaultFile, d, 0644)
 		check(err)
 	}
